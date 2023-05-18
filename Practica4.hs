@@ -115,12 +115,13 @@ palabraValidaPorSilabas (x:resto) = silabaValida [x]      &&      palabraValidaP
 silabaValida :: String -> Bool
 silabaValida [x] =   let funciones = [esVocal]  -- Solo las vocales pueden ser sílabas solas
                               in all (\f -> f x) funciones
-silabaValida str@[x, y] = let funciones = [consonanteFinal]  -- Lista de funciones de reglas de silaba a comprobar TODO
+silabaValida str@[_, _] = let funciones = [consonanteFinal]  -- Lista de funciones de reglas de silaba a comprobar TODO
                                       in all (\f -> f str) funciones
-silabaValida str@[x, y, z] = let funciones = [consonanteFinal]  -- Lista de funciones de reglas de silaba a comprobar TODO
+silabaValida str@[_, _, _] = let funciones = [consonanteFinal]  -- Lista de funciones de reglas de silaba a comprobar TODO
                                           in all (\f -> f str) funciones
-silabaValida str@[x, y, z, w] = let funciones = [consonanteFinal]  -- Lista de funciones de reglas de silaba a comprobar TODO
+silabaValida str@[_, _, _, _] = let funciones = [consonanteFinal]  -- Lista de funciones de reglas de silaba a comprobar TODO
                                               in all (\f -> f str) funciones
+silabaValida _ = False
 
 
 {-
