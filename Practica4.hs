@@ -75,6 +75,7 @@ COMBINACIONES
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 -}
 --Dadas unas letras devuelve todas las posibles combinaciones con al menos dos letras sin elementos repetidos. (copiada de internet)
+--TODO: no esta bien hecho
 combinaciones :: String -> [String]
 combinaciones str = nub $ filter (\s -> length s >= 2) $ concatMap subsequences (tails str)
 
