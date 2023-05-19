@@ -15,43 +15,79 @@ Reglas de sílabas:
 ..........
 -}
 
-{-
+--
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------
-MAIN
+--MAIN
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------
--}
+--
 main :: IO ()
 main = do
   putStrLn "Este programa facilita el juego del Scrable. Se pedirá al usuario que ingrese las letras que tiene disponibles, así como las letras disponibles en el tablero y se le devolverá las palabras que puede formar. "
   putStrLn "Tenga en cuenta que de lo que escriba el usuario solo se tendrán en cuenta las letras."
   loop
 
+-- Bucle infinito
 loop :: IO ()
 loop = do
-  putStrLn "\nIngrese sus letras (o escriba 'salir' para finalizar):"
+  putStrLn "\n\nIngrese sus letras (o escriba 'salir' para finalizar):"
   input1 <- getLine
   if input1 /= "salir"
     then do
       putStrLn "Ingrese las letras del tablero:"
       input2 <- getLine
-      let resultado = procesar (soloLetrasMinusculas (input1 ++ input2))
-      putStrLn "Aquí tienes algunas palabras que puedes usar:"
-      putStrLn $ intercalate ", " resultado
+      imprimeRes (soloLetrasMinusculas (input1 ++ input2))
       loop
     else putStrLn "\nSaliendo...."
 
+-- Dado un string con las letras imprime los resultados
+imprimeRes :: String -> IO ()
+imprimeRes str = do
+  let (resultado, n) = generaRes (fromIntegral (length str)) str
+  if null resultado
+    then putStrLn "No se han podido encontrar palabras"
+    else do
+      putStrLn "Aquí tienes algunas palabras que puedes usar:"
+      putStrLn $ intercalate ", " resultado
+      masRes (n - 1) str
+
+-- Genera mas resultados si así lo desea el usuario
+masRes :: Integer -> String ->  IO ()
+masRes n str = 
+  if n == 1
+    then return()
+    else do
+      putStrLn "\n¿Quieres más resultados? (escribe 'si' o 's' si es el caso)"
+      input <- getLine
+      if input == "si" || input == "s"
+        then do
+          let (resultado, n') = generaRes n str
+          if null resultado
+            then putStrLn "\nNo se han podido encontrar mas palabras"
+            else do
+              putStrLn "\nAquí tienes algunas palabras que puedes usar:"
+              putStrLn $ intercalate ", " resultado
+              masRes (n' - 1) str
+        else return()
 
 
---Dada una lista de letras te da todas las posibles palabras validas ordenadas de mayor a menor longitud
-procesar :: String ->  [String]
-procesar str = ordenarPorLongitud (filter palabraValida( combinaciones str ))
+--Genera todos los resultados posibles se cierta longitud con la maxima longitud posible
+generaRes :: Integer -> String ->  ([String], Integer)
+generaRes 1 _ = ([], 1)
+generaRes n str = let res = procesarNum n str
+                  in if null res
+                    then generaRes (n - 1) str
+                    else (res, n)
 
 
-{-
+--Dada una lista de letras te da todas las posibles palabras validas de longitud n
+procesarNum :: Integer -> String ->  [String]
+procesarNum n str = filter palabraValida (generaPalabrasNum n str)
+
+--
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------
-FUNCIONES AUXILIARES
+--FUNCIONES AUXILIARES
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------
--}
+--
 
 --Devuelve true si es consonante
 esVocal :: Char -> Bool
@@ -65,26 +101,40 @@ esConsonante c = not (esVocal c) && c `elem` ['a'..'z']
 soloLetrasMinusculas :: String -> String
 soloLetrasMinusculas str = map toLower (filter isAlpha str)
 
---Ordena una lista de string por longitud de palabra
-ordenarPorLongitud :: [String] -> [String]
-ordenarPorLongitud = sortBy (\x y -> compare (length y) (length x))
 
-{-
-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
-COMBINACIONES
-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
--}
---Dadas unas letras devuelve todas las posibles combinaciones con al menos dos letras sin elementos repetidos. (copiada de internet)
---TODO: no esta bien hecho
-combinaciones :: String -> [String]
-combinaciones str = nub $ filter (\s -> length s >= 2) $ concatMap subsequences (tails str)
 
-{-
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------
-VALIDAR PALABRA
+--GENERACION DE POSIBLES PALABRAS
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------
-A partir de ahora se supone correcto que el parametro de entrada es una lista de letras en minuscula, sin números ni ningún tipo de simbolo
--}
+--Copiadas las combinaciones de internet (https://www.glc.us.es/~jalonso/vestigium/i1m2014-combinatoria-en-haskell/)
+
+--Genera todas las palabras posibles
+generaPalabrasNum :: Integer -> String -> [String]
+generaPalabrasNum n str = nub $ permutaLetras(combinacionesNum n str)
+
+--Calcula las permutaciones de todas las palabras de la lista
+permutaLetras :: [String] -> [String]
+permutaLetras strs = nub $ concatMap (\str -> permutations str) strs
+
+--Devuelve todas las combinaciones posibles de cierta longitud
+combinacionesNum :: Integer -> String -> [String]
+combinacionesNum = combinaciones_2
+
+-- 2ª definición
+combinaciones_2 :: Integer -> [a] -> [[a]]
+combinaciones_2 0 _          = [[]]
+combinaciones_2 _ []         = []
+combinaciones_2 k (x:xs) = 
+    [x:ys | ys <- combinaciones_2 (k-1) xs] ++ combinaciones_2 k xs  
+ 
+
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+--VALIDAR PALABRA
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+--A partir de ahora se supone correcto que el parametro de entrada es una lista de letras en minuscula, sin números ni ningún tipo de simbolo
+
 --Devuelve true si la palabra es valida con las reglas definidas
 palabraValida :: String -> Bool
 palabraValida str = palabraValidaGeneral str && palabraValidaPorSilabas str
@@ -125,11 +175,11 @@ silabaValida str@[_, _, _, _] = let funciones = [consonanteFinal]  -- Lista de f
 silabaValida _ = False
 
 
-{-
+--
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------
-REGLAS GENERALES
+--REGLAS GENERALES
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------
--}
+--
 
 --Devuelve false si encuentra tres o mas consonantes seguidas
 noMasTresConsonantesSeguidas :: String -> Bool
@@ -143,17 +193,45 @@ noMasTresConsonantesSeguidas str = not (hayTresConsonantesSeguidas str)
 
 --TODO- hacer mas reglas
 
-{-
+--
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------
-REGLAS DE SILABAS
+--REGLAS DE SILABAS
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------
--}
+--
 
 --Devuelve false si la ultima letra es consonante y distinta de l,n,s,r
 consonanteFinal :: String -> Bool
 consonanteFinal str = let ult = last str in not(esConsonante ult && not(ult `elem` "lnsr"))
 
 --TODO- hacer mas reglas
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
