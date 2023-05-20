@@ -141,11 +141,11 @@ palabraValida str = palabraValidaGeneral str && palabraValidaPorSilabas str
 
 --Realiza comprobaciones generales sobre la palabra y devuelve si es valida 
 palabraValidaGeneral :: String -> Bool
-palabraValidaGeneral palabra =
+palabraValidaGeneral str =
   let
-    funciones = [noMasTresConsonantesSeguidas, qMasUMasConsonante]  -- Lista de funciones de reglas generales a comprobar TODO
+    funciones = [noMasTresConsonantesSeguidas, qMasUMasConsonante, hMasVocal, noConsMasH]  -- Lista de funciones de reglas generales a comprobar TODO
   in
-    all (\f -> f palabra) funciones
+    all (\f -> f str) funciones
 
 --Hace un busqueda en profundidad para ver si una palabra es valida separandola por silabas y comprobando cada silaba, supone silabas de hasta 4 letras
 palabraValidaPorSilabas :: String -> Bool
@@ -179,7 +179,7 @@ silabaValida _ = False
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 --REGLAS GENERALES
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------
---
+--Todas la reglas devuelven false si no se cumple la regla del español que se esta implementado
 
 --Devuelve false si encuentra tres o mas consonantes seguidas
 noMasTresConsonantesSeguidas :: String -> Bool
@@ -199,7 +199,20 @@ qMasUMasConsonante (x:y:z:res) = if x == 'q'
                                    then y == 'u' && esVocal z && qMasUMasConsonante (y:z:res)
                                    else qMasUMasConsonante (y:z:res)
 
+--Devuelve false hay alguna h que no este seguida de vocal
+hMasVocal :: String -> Bool
+hMasVocal [] = True
+hMasVocal [x] = x /= 'h'
+hMasVocal (x:y:res) = if x == 'h'
+                    then esVocal y && hMasVocal (y:res)
+                    else hMasVocal (y:res)
 
+--Devuelve false hay alguna h que este precedida con una consonante
+noConsMasH :: String -> Bool
+noConsMasH [] = True
+noConsMasH [_] = True
+noConsMasH [x, y] = if y == 'h' then not(esConsonante x) else True
+noConsMasH (x:y:res) = if y == 'h' then not(esConsonante x) && noConsMasH (y:res) else noConsMasH (y:res)
 
 
 
@@ -209,7 +222,7 @@ qMasUMasConsonante (x:y:z:res) = if x == 'q'
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 --REGLAS DE SILABAS
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------
---
+--Todas la reglas devuelven false si no se cumple la regla del español que se esta implementado
 
 --Devuelve false si la ultima letra es consonante y distinta de l,n,s,r
 consonanteFinal :: String -> Bool
