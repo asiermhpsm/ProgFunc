@@ -143,7 +143,7 @@ palabraValida str = palabraValidaGeneral str && palabraValidaPorSilabas str
 palabraValidaGeneral :: String -> Bool
 palabraValidaGeneral palabra =
   let
-    funciones = [noMasTresConsonantesSeguidas]  -- Lista de funciones de reglas generales a comprobar TODO
+    funciones = [noMasTresConsonantesSeguidas, qMasUMasConsonante]  -- Lista de funciones de reglas generales a comprobar TODO
   in
     all (\f -> f palabra) funciones
 
@@ -166,11 +166,11 @@ palabraValidaPorSilabas (x:resto) = silabaValida [x]      &&      palabraValidaP
 silabaValida :: String -> Bool
 silabaValida [x] =   let funciones = [esVocal]  -- Solo las vocales pueden ser sílabas solas
                               in all (\f -> f x) funciones
-silabaValida str@[_, _] = let funciones = [consonanteFinal]  -- Lista de funciones de reglas de silaba a comprobar TODO
+silabaValida str@[_, _] = let funciones = [consonanteFinal]  -- Lista de funciones de reglas de silabas de longitud 2 a comprobar TODO
                                       in all (\f -> f str) funciones
-silabaValida str@[_, _, _] = let funciones = [consonanteFinal]  -- Lista de funciones de reglas de silaba a comprobar TODO
+silabaValida str@[_, _, _] = let funciones = [consonanteFinal]  -- Lista de funciones de reglas de silabas de longitud 3 a comprobar TODO
                                           in all (\f -> f str) funciones
-silabaValida str@[_, _, _, _] = let funciones = [consonanteFinal]  -- Lista de funciones de reglas de silaba a comprobar TODO
+silabaValida str@[_, _, _, _] = let funciones = [consonanteFinal]  -- Lista de funciones de reglas de silabas de longitud 4 a comprobar TODO
                                               in all (\f -> f str) funciones
 silabaValida _ = False
 
@@ -190,6 +190,18 @@ noMasTresConsonantesSeguidas str = not (hayTresConsonantesSeguidas str)
                                           | otherwise = hayTresConsonantesSeguidas (y:z:xs)
     hayTresConsonantesSeguidas _ = False
 
+-- Devuelve False si encuentra alguna 'q' que no esté seguida de una 'u' y una vocal
+qMasUMasConsonante :: String -> Bool
+qMasUMasConsonante [] = True
+qMasUMasConsonante [x] = x /= 'q'
+qMasUMasConsonante [x, y] = x /= 'q' && qMasUMasConsonante [y]
+qMasUMasConsonante (x:y:z:res) = if x == 'q'
+                                   then y == 'u' && esVocal z && qMasUMasConsonante (y:z:res)
+                                   else qMasUMasConsonante (y:z:res)
+
+
+
+
 
 --TODO- hacer mas reglas
 
@@ -204,58 +216,5 @@ consonanteFinal :: String -> Bool
 consonanteFinal str = let ult = last str in not(esConsonante ult && not(ult `elem` "lnsr"))
 
 --TODO- hacer mas reglas
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
