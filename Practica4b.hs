@@ -188,7 +188,7 @@ palabraValidaPorSilabas (x:resto) = silabaValida [x]      &&      palabraValidaP
 silabaValida :: String -> Bool
 silabaValida [x] =   let funciones = [esVocal]  -- Solo las vocales pueden ser sílabas solas
                               in all (\f -> f x) funciones
-silabaValida str@[_, _] = let funciones = [consonanteFinal,dosConsonantesInicio,cv_vc]  -- Lista de funciones de reglas de silabas de longitud 2 a comprobar TODO
+silabaValida str@[_, _] = let funciones = [consonanteFinal,cv_vc]  -- Lista de funciones de reglas de silabas de longitud 2 a comprobar TODO
                                       in all (\f -> f str) funciones
 silabaValida str@[_, _, _] = let funciones = [consonanteFinal,dosConsonantesInicio]  -- Lista de funciones de reglas de silabas de longitud 3 a comprobar TODO
                                           in all (\f -> f str) funciones
@@ -284,10 +284,10 @@ noCaracEspMasVocal (x:y:res) = if x == '1' || x == '2'
 consonanteFinal :: String -> Bool
 consonanteFinal str = let ult = last str in not(esConsonante ult && not(ult `elem` "lnsr"))
 
---Devuelve false si encuentra dos consonantes al inicio que la segunda no sean 'l' o 'r' o la primera no sea una consonante fuerte (b, c, d, f, g, k, p, t, v)
+--Devuelve false si encuentra dos consonantes al inicio que la segunda no sean 'l' o 'r' o la primera no sea una consonante fuerte (b, c, d, f, g, p, t)
 dosConsonantesInicio :: String -> Bool
 dosConsonantesInicio (c1:c2:_) = if esConsonante c1 && esConsonante c2
-                                    then c1 `elem` "bcdfgkptv" && c2 `elem` "lr"
+                                    then c1 `elem` "bcdfgpt" && c2 `elem` "lr"
                                     else True
 dosConsonantesInicio _ = False
 
