@@ -81,7 +81,7 @@ generaRes n str = let res = procesarNum n str
 
 --Dada una lista de letras te da todas las posibles palabras validas de longitud n
 procesarNum :: Integer -> String ->  [String]
-procesarNum n str = filter palabraValida (generaPalabrasNum n str)
+procesarNum n str = sustListaALetras(filter palabraValida (sustListaACod (generaPalabrasNum n str)))
 
 --
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -95,11 +95,42 @@ esVocal c = c `elem` "aeiou"
 
 --Devuelve true si es consonante
 esConsonante :: Char -> Bool
-esConsonante c = not (esVocal c) && c `elem` ['a'..'z']
+esConsonante c = not (esVocal c) && (c `elem` ['a'..'z'] || c `elem` ['1', '2'])
 
 --Dado un string devuelve solo las letras y convertidas todas a minuscula
 soloLetrasMinusculas :: String -> String
 soloLetrasMinusculas str = map toLower (filter isAlpha str)
+
+--Sustituye letras especiales (como ch o ll) por un codigo
+sustLetrasACod :: String -> String
+sustLetrasACod [] = []
+sustLetrasACod [x] = [x]
+sustLetrasACod (x:y:res)
+                    | x == 'c' && y == 'h' = ('1':sustLetrasACod res)
+                    | x == 'l' && y == 'l' = ('2':sustLetrasACod res)
+                    | otherwise = (x:sustLetrasACod (y:res))
+
+
+
+--Sustituye todas las palabras de una lista segun la funcion sustLetras
+sustListaACod :: [String] -> [String]
+sustListaACod = map sustLetrasACod
+
+
+--Sustituye codigo por sus respectivas letras especiales (como ch o ll)
+sustCodALetras :: String -> String
+sustCodALetras [] = []
+sustCodALetras [x] = [x]
+sustCodALetras (x:res)
+                    | x == '1' = ('c':'h':res)
+                    | x == '2' = ('l':'l':res)
+                    | otherwise = (x:sustCodALetras res)
+
+
+
+--Sustituye todas las palabras de una lista segun la funcion sustLetras
+sustListaALetras :: [String] -> [String]
+sustListaALetras = map sustCodALetras
 
 
 
@@ -143,7 +174,7 @@ palabraValida str = palabraValidaGeneral str && palabraValidaPorSilabas str
 palabraValidaGeneral :: String -> Bool
 palabraValidaGeneral str =
   let
-    funciones = [noMasTresConsonantesSeguidas, qMasUMasConsonante, hMasVocal, noConsMasH,dosLetrasIguales,terminaDosConsonantes,noMasTresVocalesSeguidas]  -- Lista de funciones de reglas generales a comprobar TODO
+    funciones = [noMasTresConsonantesSeguidas, qMasUMasConsonante, hMasVocal, noConsMasH,dosLetrasIguales,noTerminaDosConsonantes,noMasTresVocalesSeguidas]  -- Lista de funciones de reglas generales a comprobar TODO
   in
     all (\f -> f str) funciones
 
@@ -166,7 +197,7 @@ palabraValidaPorSilabas (x:resto) = silabaValida [x]      &&      palabraValidaP
 silabaValida :: String -> Bool
 silabaValida [x] =   let funciones = [esVocal]  -- Solo las vocales pueden ser sílabas solas
                               in all (\f -> f x) funciones
-silabaValida str@[_, _] = let funciones = [consonanteFinal,dosConsonantesInicio]  -- Lista de funciones de reglas de silabas de longitud 2 a comprobar TODO
+silabaValida str@[_, _] = let funciones = [consonanteFinal,dosConsonantesInicio,cv_vc]  -- Lista de funciones de reglas de silabas de longitud 2 a comprobar TODO
                                       in all (\f -> f str) funciones
 silabaValida str@[_, _, _] = let funciones = [consonanteFinal,dosConsonantesInicio]  -- Lista de funciones de reglas de silabas de longitud 3 a comprobar TODO
                                           in all (\f -> f str) funciones
@@ -199,7 +230,7 @@ qMasUMasConsonante (x:y:z:res) = if x == 'q'
                                    then y == 'u' && esVocal z && qMasUMasConsonante (y:z:res)
                                    else qMasUMasConsonante (y:z:res)
 
---Devuelve false hay alguna h que no este seguida de vocal
+--Devuelve false si hay alguna h que no este seguida de vocal
 hMasVocal :: String -> Bool
 hMasVocal [] = True
 hMasVocal [x] = x /= 'h'
@@ -207,7 +238,7 @@ hMasVocal (x:y:res) = if x == 'h'
                     then esVocal y && hMasVocal (y:res)
                     else hMasVocal (y:res)
 
---Devuelve false hay alguna h que este precedida con una consonante
+--Devuelve false si hay alguna h que este precedida con una consonante
 noConsMasH :: String -> Bool
 noConsMasH [] = True
 noConsMasH [_] = True
@@ -231,12 +262,14 @@ noMasTresVocalesSeguidas str = not (hayTresVocalesSeguidas str)
                                           | otherwise = hayTresVocalesSeguidas (y:z:xs)
     hayTresVocalesSeguidas _ = False
 
+--Devuelve false si termina en dos consonantes
+noTerminaDosConsonantes :: String -> Bool
+noTerminaDosConsonantes str = case reverse str of
+                               c1:c2:_ -> not (esConsonante c1 && esConsonante c2)
+                               _ -> True
 
-terminaDosConsonantes :: String -> Bool
-terminaDosConsonantes str = auxConsonantesFinal (take 2 (drop (length str - 2) str))
 
-auxConsonantesFinal :: String -> Bool
-auxConsonantesFinal str = not (esConsonante (head str)) && (esConsonante (last str))
+
 --TODO- hacer mas reglas
 
 --
@@ -261,8 +294,9 @@ aux1dosConsonantesFinal str = let ult = str in not(esConsonante ult)
 aux2dosConsonantesFinal :: Char -> Bool
 aux2dosConsonantesFinal str = let ult = str in not(esConsonante ult && not(ult `elem` "lr"))
 
-
-
+--Devuelve false si se le pasa una silaba de más de dos letras o si no son consonante-vocal o vocal-consonante
+cv_vc :: String -> Bool
+cv_vc [x,y] = (esConsonante x && esVocal y) || (esVocal x && esConsonante y)
+cv_vc _ = False
 
 --TODO- hacer mas reglas
-
