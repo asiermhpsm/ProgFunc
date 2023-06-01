@@ -350,7 +350,7 @@ ccv_cvc_cvv _ = False
 -------------------------------
 
 --Devuelve false si se le pasa una silaba de longitud distinta de 4 
---o si no son consonante-consonante-vocal-vocal (true-no), son consonante-consonante-vocal-consonante (cris-tal), consonante-vocal-vocal-consonante (hier-ba)
+--o si no son consonante-consonante-vocal-vocal (esterno-clei-domastoideo), son consonante-consonante-vocal-consonante (cris-tal), consonante-vocal-vocal-consonante (hier-ba)
 ccvv_ccvc :: String -> Bool
 ccvv_ccvc [x,y,z,w] = (esConsonante x && esConsonante y && esVocal z && esVocal w) || (esConsonante x && esConsonante y && esVocal z && esConsonante w)
 ccvv_ccvc _ = False
