@@ -29,11 +29,11 @@ main = do
 -- Bucle infinito
 loop :: IO ()
 loop = do
-  putStrLn "\n\nIngrese sus letras (o escriba 'salir' para finalizar):"
+  putStrLn "\n\nINGRESE SUS LETRAS (o escriba 'salir' para finalizar):"
   input1 <- getLine
   if input1 /= "salir"
     then do
-      putStrLn "Ingrese las letras del tablero:"
+      putStrLn "INGRESE LAS LETRAS DEL TABLERO"
       input2 <- getLine
       imprimeRes (soloLetrasMinusculas (input1 ++ input2))
       loop
@@ -46,8 +46,7 @@ imprimeRes str = do
   if null resultado
     then putStrLn "No se han podido encontrar palabras"
     else do
-      putStrLn "Aquí tienes algunas palabras que puedes usar:"
-      putStrLn $ intercalate ", " resultado
+      imprimeResSeparado( separaLista resultado)
       masRes (n - 1) str
 
 -- Genera mas resultados si así lo desea el usuario
@@ -56,7 +55,7 @@ masRes n str =
   if n == 1
     then return()
     else do
-      putStrLn "\n¿Quieres más resultados? (escribe 'si' o 's' si es el caso)"
+      putStrLn "\n¿QUIERES MÁS RESULTADOS DE DISTINTA LONGITUD? (escribe 'si' o 's' si es el caso)"
       input <- getLine
       if input == "si" || input == "s"
         then do
@@ -64,8 +63,7 @@ masRes n str =
           if null resultado
             then putStrLn "\nNo se han podido encontrar mas palabras"
             else do
-              putStrLn "\nAquí tienes algunas palabras que puedes usar:"
-              putStrLn $ intercalate ", " resultado
+              imprimeResSeparado( separaLista resultado)
               masRes (n' - 1) str
         else return()
 
@@ -77,6 +75,29 @@ generaRes n str = let res = procesarNum n str
                   in if null res
                     then generaRes (n - 1) str
                     else (res, n)
+
+
+imprimeResSeparado :: [[String]] -> IO ()
+imprimeResSeparado [] = return ()
+imprimeResSeparado (list1:res) = do
+  putStrLn "\nAQUÍ TIENES ALGUNAS PALABRAS QUE PUEDES USAR:"
+  putStrLn $ intercalate ", " list1
+  if null res
+    then return ()
+    else do
+      putStrLn "\n¿QUIERES MÁS RESULTADOS? (escribe 'si' o 's' si es el caso)"
+      input <- getLine
+      if input == "si" || input == "s"
+        then imprimeResSeparado res
+        else return ()
+
+  
+
+
+separaLista :: [String] ->  [[String]]
+separaLista [] = []
+separaLista strs = take 15 strs : separaLista (drop 15 strs)
+
 
 
 --Dada una lista de letras te da todas las posibles palabras validas de longitud n
@@ -95,7 +116,7 @@ esVocal c = c `elem` "aeiou"
 
 --Devuelve true si es consonante
 esConsonante :: Char -> Bool
-esConsonante c = not (esVocal c) && (c `elem` ['a'..'z'] || c `elem` ['1', '2'])
+esConsonante c = not (esVocal c) && (c `elem` ['a'..'z'] || c `elem` "123")
 
 --Dado un string devuelve solo las letras y convertidas todas a minuscula
 soloLetrasMinusculas :: String -> String
@@ -108,6 +129,7 @@ sustLetrasACod [x] = [x]
 sustLetrasACod (x:y:res)
                     | x == 'c' && y == 'h' = ('1':sustLetrasACod res)
                     | x == 'l' && y == 'l' = ('2':sustLetrasACod res)
+                    | x == 'r' && y == 'r' = ('3':sustLetrasACod res)
                     | otherwise = (x:sustLetrasACod (y:res))
 
 --Sustituye todas las palabras de una lista segun la funcion sustLetras
@@ -121,6 +143,7 @@ sustCodALetras [x] = [x]
 sustCodALetras (x:res)
                     | x == '1' = ('c':'h':sustCodALetras res)
                     | x == '2' = ('l':'l':sustCodALetras res)
+                    | x == '3' = ('r':'r':sustCodALetras res)
                     | otherwise = (x:sustCodALetras res)
 
 --Sustituye todas las palabras de una lista segun la funcion sustLetras
@@ -165,7 +188,8 @@ palabraValida str = palabraValidaGeneral str && palabraValidaPorSilabas str
 palabraValidaGeneral :: String -> Bool
 palabraValidaGeneral str =
   let
-    funciones = [noMasTresConsonantesSeguidas, qMasUMasConsonante, hMasVocal, noConsMasH,dosLetrasIguales,noTerminaDosConsonantes,noMasTresVocalesSeguidas,noCaracEspMasVocal]  -- Lista de funciones de reglas generales a comprobar TODO
+    funciones = [noMasTresConsonantesSeguidas, qMasUMasConsonante, hMasVocal, noConsMasH, dosLetrasIguales,
+                  noTerminaDosConsonantes, noMasTresVocalesSeguidas, noCaracEspMasVocal, noRRalPrincipio, noDosVocales]  -- Lista de funciones de reglas generales a comprobar TODO
   in
     all (\f -> f str) funciones
 
@@ -188,11 +212,11 @@ palabraValidaPorSilabas (x:resto) = silabaValida [x]      &&      palabraValidaP
 silabaValida :: String -> Bool
 silabaValida [x] =   let funciones = [esVocal]  -- Solo las vocales pueden ser sílabas solas
                               in all (\f -> f x) funciones
-silabaValida str@[_, _] = let funciones = [consonanteFinal,cv_vc]  -- Lista de funciones de reglas de silabas de longitud 2 a comprobar TODO
+silabaValida str@[_, _] = let funciones = [cv_vc, consonanteFinal]  -- Lista de funciones de reglas de silabas de longitud 2 a comprobar TODO
                                       in all (\f -> f str) funciones
-silabaValida str@[_, _, _] = let funciones = [consonanteFinal,dosConsonantesInicio]  -- Lista de funciones de reglas de silabas de longitud 3 a comprobar TODO
+silabaValida str@[_, _, _] = let funciones = [ccv_cvc_cvv, consonanteFinal,dosConsonantesInicio]  -- Lista de funciones de reglas de silabas de longitud 3 a comprobar TODO
                                           in all (\f -> f str) funciones
-silabaValida str@[_, _, _, _] = let funciones = [consonanteFinal,dosConsonantesInicio,ccvv]  -- Lista de funciones de reglas de silabas de longitud 4 a comprobar TODO
+silabaValida str@[_, _, _, _] = let funciones = [ccvv_ccvc, consonanteFinal, dosConsonantesInicio]  -- Lista de funciones de reglas de silabas de longitud 4 a comprobar TODO
                                               in all (\f -> f str) funciones
 silabaValida _ = False
 
@@ -212,13 +236,13 @@ noMasTresConsonantesSeguidas str = not (hayTresConsonantesSeguidas str)
                                           | otherwise = hayTresConsonantesSeguidas (y:z:xs)
     hayTresConsonantesSeguidas _ = False
 
--- Devuelve False si encuentra alguna 'q' que no esté seguida de una 'u' y una vocal
+-- Devuelve False si encuentra alguna 'q' que no esté seguida de una 'u' y una vocal e o i
 qMasUMasConsonante :: String -> Bool
 qMasUMasConsonante [] = True
 qMasUMasConsonante [x] = x /= 'q'
 qMasUMasConsonante [x, y] = x /= 'q' && qMasUMasConsonante [y]
 qMasUMasConsonante (x:y:z:res) = if x == 'q'
-                                   then y == 'u' && esVocal z && qMasUMasConsonante (y:z:res)
+                                   then y == 'u' && z `elem` "ei" && qMasUMasConsonante (y:z:res)
                                    else qMasUMasConsonante (y:z:res)
 
 --Devuelve false si hay alguna h que no este seguida de vocal
@@ -265,9 +289,19 @@ noTerminaDosConsonantes str = case reverse str of
 noCaracEspMasVocal :: String -> Bool
 noCaracEspMasVocal [] = True
 noCaracEspMasVocal [x] = True
-noCaracEspMasVocal (x:y:res) = if x == '1' || x == '2'
+noCaracEspMasVocal (x:y:res) = if x == '1' || x == '2' || x == '3'
                                   then esVocal y && noCaracEspMasVocal res
                                   else noCaracEspMasVocal (y:res)
+
+--Devuelve false si el caracter especial rr esta al principio de la palabra
+noRRalPrincipio :: String -> Bool
+noRRalPrincipio [] = True
+noRRalPrincipio (x:_) = x/='3'
+
+--Devuelve false si la palabra esta compuesta solo de dos vocales
+noDosVocales :: String -> Bool
+noDosVocales [x,y] = not (esVocal x && esVocal y)
+noDosVocales _ = True
 
 
 
@@ -284,30 +318,40 @@ noCaracEspMasVocal (x:y:res) = if x == '1' || x == '2'
 consonanteFinal :: String -> Bool
 consonanteFinal str = let ult = last str in not(esConsonante ult && not(ult `elem` "lnsr"))
 
---Devuelve false si encuentra dos consonantes al inicio que la segunda no sean 'l' o 'r' o la primera no sea una consonante fuerte (b, c, d, f, g, p, t)
+--Devuelve false si encuentra dos consonantes al inicio que la segunda no sean 'l' o 'r' o la primera no sea una consonante fuerte (b, c, d, f, g, p, k, t)
 dosConsonantesInicio :: String -> Bool
 dosConsonantesInicio (c1:c2:_) = if esConsonante c1 && esConsonante c2
-                                    then c1 `elem` "bcdfgpt" && c2 `elem` "lr"
+                                    then c1 `elem` "bcdfgkpt" && c2 `elem` "lr"
                                     else True
 dosConsonantesInicio _ = False
+
 
 --REGLAS DE SILABAS DE 2 LETRAS
 -------------------------------
 
---Devuelve false si se le pasa una silaba de longitud dos letras o si no son consonante-vocal o vocal-consonante
+--Devuelve false si se le pasa una silaba de longitud distinta de 2 o si no son consonante-vocal o vocal-consonante 
 cv_vc :: String -> Bool
 cv_vc [x,y] = (esConsonante x && esVocal y) || (esVocal x && esConsonante y)
 cv_vc _ = False
 
+
 --REGLAS DE SILABAS DE 3 LETRAS
 -------------------------------
+
+--Devuelve false si se le pasa una silaba de longitud distinta de 3 
+--o si no son consonante-consonante-vocal (tri-go), consonante-vocal-consonante (cis-ne), consonante-vocal-vocal (re-vue-lo)
+ccv_cvc_cvv :: String -> Bool
+ccv_cvc_cvv [x,y,z] = (esConsonante x && esConsonante y && esVocal z) || (esConsonante x && esVocal y && esConsonante z) || (esConsonante x && esVocal y && esVocal z)
+ccv_cvc_cvv _ = False
 
 
 --REGLAS DE SILABAS DE 4 LETRAS
 -------------------------------
 
---Devuelve false si se le pasa una silaba de longitud 4 letras o si no son consonante-consonante-vocal-vocal
-ccvv :: String -> Bool
-ccvv [x,y,z,w] = esConsonante x && esConsonante y && esVocal z && esVocal w
-ccvv _ = False
+--Devuelve false si se le pasa una silaba de longitud distinta de 4 
+--o si no son consonante-consonante-vocal-vocal (true-no), son consonante-consonante-vocal-consonante (cris-tal), consonante-vocal-vocal-consonante (hier-ba)
+ccvv_ccvc :: String -> Bool
+ccvv_ccvc [x,y,z,w] = (esConsonante x && esConsonante y && esVocal z && esVocal w) || (esConsonante x && esConsonante y && esVocal z && esConsonante w)
+ccvv_ccvc _ = False
+
 
