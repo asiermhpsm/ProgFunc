@@ -76,7 +76,7 @@ generaRes n str = let res = procesarNum n str
                     then generaRes (n - 1) str
                     else (res, n)
 
-
+--Dada una lista de palabras as imprime de 15 en 15 hasta que se acaben o el usuario decida parar
 imprimeResSeparado :: [[String]] -> IO ()
 imprimeResSeparado [] = return ()
 imprimeResSeparado (list1:res) = do
@@ -91,9 +91,7 @@ imprimeResSeparado (list1:res) = do
         then imprimeResSeparado res
         else return ()
 
-  
-
-
+--Separa una lista de string en una lista con listas de 15 string
 separaLista :: [String] ->  [[String]]
 separaLista [] = []
 separaLista strs = take 15 strs : separaLista (drop 15 strs)
@@ -130,6 +128,7 @@ sustLetrasACod (x:y:res)
                     | x == 'c' && y == 'h' = ('1':sustLetrasACod res)
                     | x == 'l' && y == 'l' = ('2':sustLetrasACod res)
                     | x == 'r' && y == 'r' = ('3':sustLetrasACod res)
+                    | x == 'm' && (y == 'b' || y == 'p') = ('n':y:sustLetrasACod res)
                     | otherwise = (x:sustLetrasACod (y:res))
 
 --Sustituye todas las palabras de una lista segun la funcion sustLetras
@@ -139,12 +138,14 @@ sustListaACod = map sustLetrasACod
 --Sustituye codigo por sus respectivas letras especiales (como ch o ll)
 sustCodALetras :: String -> String
 sustCodALetras [] = []
-sustCodALetras [x] = [x]
 sustCodALetras (x:res)
-                    | x == '1' = ('c':'h':sustCodALetras res)
-                    | x == '2' = ('l':'l':sustCodALetras res)
-                    | x == '3' = ('r':'r':sustCodALetras res)
-                    | otherwise = (x:sustCodALetras res)
+    | x == '1' = 'c' : 'h' : sustCodALetras res
+    | x == '2' = 'l' : 'l' : sustCodALetras res
+    | x == '3' = 'r' : 'r' : sustCodALetras res
+    | x == 'n' && not (null res) && head res `elem` "bp" = 'm' : head res : sustCodALetras (tail res)
+    | otherwise = x : sustCodALetras res
+
+
 
 --Sustituye todas las palabras de una lista segun la funcion sustLetras
 sustListaALetras :: [String] -> [String]
