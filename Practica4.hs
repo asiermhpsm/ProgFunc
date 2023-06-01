@@ -190,7 +190,7 @@ palabraValidaGeneral :: String -> Bool
 palabraValidaGeneral str =
   let
     funciones = [noMasTresConsonantesSeguidas, qMasUMasConsonante, hMasVocal, noConsMasH, dosLetrasIguales,
-                  noTerminaDosConsonantes, noMasTresVocalesSeguidas, noCaracEspMasVocal, noRRalPrincipio, noDosVocales]  -- Lista de funciones de reglas generales a comprobar TODO
+                  noTerminaDosConsonantes, noMasTresVocalesSeguidas, noCaracEspMasVocal, noRRalPrincipio, noDosVocales, sinW]  -- Lista de funciones de reglas generales a comprobar TODO
   in
     all (\f -> f str) funciones
 
@@ -304,6 +304,12 @@ noDosVocales :: String -> Bool
 noDosVocales [x,y] = not (esVocal x && esVocal y)
 noDosVocales _ = True
 
+--Devuelve false si la palabra contiene 'w' 
+sinW :: String -> Bool
+sinW [] = True
+sinW (x:res) | x == 'w' = False
+             | otherwise = sinW res
+
 
 
 --
@@ -322,9 +328,14 @@ consonanteFinal str = let ult = last str in not(esConsonante ult && not(ult `ele
 --Devuelve false si encuentra dos consonantes al inicio que la segunda no sean 'l' o 'r' o la primera no sea una consonante fuerte (b, c, d, f, g, p, k, t)
 dosConsonantesInicio :: String -> Bool
 dosConsonantesInicio (c1:c2:_) = if esConsonante c1 && esConsonante c2
-                                    then c1 `elem` "bcdfgkpt" && c2 `elem` "lr"
+                                    then if c1 `elem` "bcfgp" && c2 `elem` "lr"
+                                      then True
+                                      else if c1 `elem` "dt" && c2 == 'r'
+                                        then True
+                                        else False
                                     else True
 dosConsonantesInicio _ = False
+
 
 
 --REGLAS DE SILABAS DE 2 LETRAS
@@ -354,5 +365,4 @@ ccv_cvc_cvv _ = False
 ccvv_ccvc :: String -> Bool
 ccvv_ccvc [x,y,z,w] = (esConsonante x && esConsonante y && esVocal z && esVocal w) || (esConsonante x && esConsonante y && esVocal z && esConsonante w)
 ccvv_ccvc _ = False
-
 
